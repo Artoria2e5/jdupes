@@ -14,6 +14,8 @@
 #define IS_CONT(a)  ((a & 0xc0) == 0x80)
 #define GET_CONT(a) (a & 0x3f)
 #define TO_HEX(a) (char)(((a) & 0x0f) <= 0x09 ? ((a) & 0x0f) + 0x30 : ((a) & 0x0f) + 0x57)
+// assert with message
+#define assertm(exp, msg) assert(((void)msg, exp))
 
 #ifndef __GNUC__
 #define __builtin_expect(v,e) (v)
@@ -29,7 +31,7 @@
 static inline uint32_t decode_utf8(const char * restrict * const string) {
   uint32_t ret = 0;
   /** Eat problems up silently. */
-  assert(!IS_CONT(**string));
+  assertm(!IS_CONT(**string), "stray continuation byte");
   while (unlikely(IS_CONT(**string)))
     (*string)++;
 
@@ -60,7 +62,7 @@ static inline uint32_t decode_utf8(const char * restrict * const string) {
   }
 
   /** We shouldn't be here... Because 5 and 6 bytes are impossible... */
-  assert(0);
+  assertm(0, "overlong utf-8?");
   return 0xffffffff;
 }
 
@@ -122,7 +124,7 @@ extern void printjson(file_t * restrict files, const int argc, char **argv)
   printf("  \"commandLine\": \"");
   while (arg < argc) {
     len = sprintf(temp_insert, " %s", argv[arg]);
-    assert(len >= 0);
+    assertm(len >= 0, "sprintf");
     temp_insert += len;
     arg++;
   }
